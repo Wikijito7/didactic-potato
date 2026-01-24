@@ -13,13 +13,8 @@
 ```kotlin
 class LoginUseCaseTest {
 
-    private lateinit var useCase: LoginUseCase
     private val repository: AuthRepository = mockk()
-
-    @Before
-    fun setUp() {
-        useCase = LoginUseCase(repository)
-    }
+    private val useCase = LoginUseCase(repository)
 
     @Test
     fun `Given valid credentials When login Then returns success result`() = runTest {
@@ -40,14 +35,9 @@ class LoginUseCaseTest {
 ```kotlin
 class AuthRepositoryTest {
 
-    private lateinit var repository: AuthRepository
     private val dataSource: AuthDataSource = mockk()
     private val tokenProvider: TokenProvider = mockk()
-
-    @Before
-    fun setUp() {
-        repository = AuthRepository(dataSource, tokenProvider)
-    }
+    private val repository = AuthRepository(dataSource, tokenProvider)
 
     @Test
     fun `Given login request When login Then calls data source and saves token`() = runTest {
@@ -60,8 +50,8 @@ class AuthRepositoryTest {
         repository.login("user", "pass")
 
         // Then
-        coVerify { dataSource.login("user", "pass") }
-        verify { tokenProvider.saveToken("token") }
+        coVerify(exactly = 1) { dataSource.login("user", "pass") }
+        verify(exactly = 1) { tokenProvider.saveToken("token") }
     }
 }
 ```
@@ -70,13 +60,8 @@ class AuthRepositoryTest {
 ```kotlin
 class LoginViewModelTest {
 
-    private lateinit var viewModel: LoginViewModel
     private val useCase: LoginUseCase = mockk()
-
-    @Before
-    fun setUp() {
-        viewModel = LoginViewModel(useCase)
-    }
+    private val viewModel = LoginViewModel(useCase)
 
     @Test
     fun `Given valid login data When login clicked Then updates state to success`() = runTest {
@@ -98,11 +83,11 @@ class LoginViewModelTest {
 ```
 
 ### Mocking with Mockk
-- **Basic Mock**: `val mock = mockk<MyClass>()`
-- **Relax**: `mockk<MyClass>(relaxed = true)` for default implementations
-- **Verification**: `verify { mock.method() }`
+- **Basic Mock**: `val mock = mockk<MyClass>()` - Preferred approach
+- **Relaxed Mock**: `mockk<MyClass>(relaxed = true)` - Use only when mocking is extremely difficult
+- **Verification**: `verify(exactly = n) { mock.method() }` - Always specify exactly count
 - **Stubbing**: `every { mock.method() } returns value`
-- **Coroutine Mocking**: `coEvery`, `coVerify` for suspend functions
+- **Coroutine Mocking**: `coEvery`, `coVerify(exactly = n)` for suspend functions
 
 ### Test Data
 - Create test data factories
@@ -142,8 +127,11 @@ dependencies {
 
 ### Best Practices
 - Test one thing per test method
-- Use descriptive test names
+- Use descriptive test names (BDD style)
 - Arrange-Act-Assert pattern
 - Mock external dependencies
 - Test error scenarios
 - Keep tests fast and independent
+- **NEVER use lateinit var** - Create instances inline as val
+- **Always specify verification count** - Use `verify(exactly = n)` and `coVerify(exactly = n)`
+- **Prefer regular mockk()** - Use `relaxed = true` only for extreme cases
