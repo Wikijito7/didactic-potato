@@ -18,25 +18,31 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun HomeScreen(
-    modifier: Modifier
+    modifier: Modifier,
+    viewModel: HomeViewModel = koinInject()
 ) {
-    HomeContent(modifier)
+    val state by viewModel.state.collectAsState()
+    HomeContent(modifier, state)
 }
 
 @Composable
-private fun HomeContent(modifier: Modifier) {
+private fun HomeContent(modifier: Modifier, state: HomeState) {
     Column(modifier) {
         Text(
-            text = "Hello, \$user",
+            text = "Hello, ${state.userName}",
             style = MaterialTheme.typography.headlineLarge,
             modifier = Modifier
                 .fillMaxWidth()
@@ -68,8 +74,8 @@ private fun HomeContent(modifier: Modifier) {
                 }
             }
 
-            listOf("manoleteeeeeeeeeeeeeeee", "manolete2").forEach {
-                SensorData(it,
+            state.sensors.forEach { sensor ->
+                SensorData(sensor,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
@@ -93,17 +99,17 @@ private fun HomeContent(modifier: Modifier) {
 }
 
 @Composable
-fun SensorData(name: String, modifier: Modifier) {
+fun SensorData(sensor: SensorVO, modifier: Modifier) {
     Column(
         modifier = modifier,
     ) {
         Text(
-            text = name,
+            text = sensor.name,
             fontWeight = FontWeight.Bold,
         )
-        SensorInfoItem(Icons.Default.DeviceThermostat, "27ºC 69 %", Modifier.padding(top = 8.dp))
-        SensorInfoItem(Icons.Default.BatteryStd, "36 %", Modifier.padding(top = 8.dp))
-        SensorInfoItem(Icons.Default.DateRange, "17/01/2026 13:30:00", Modifier.padding(top = 8.dp))
+        SensorInfoItem(Icons.Default.DeviceThermostat, "${sensor.temp}ºC ${sensor.humidity} %", Modifier.padding(top = 8.dp))
+        SensorInfoItem(Icons.Default.BatteryStd, sensor.batteryPercentage?.let { "$it %" } ?: "Unknown", Modifier.padding(top = 8.dp))
+        SensorInfoItem(Icons.Default.DateRange, sensor.lastUpdate, Modifier.padding(top = 8.dp))
     }
 }
 
@@ -135,6 +141,29 @@ private fun Sensor() {
 @Composable
 private fun HomeScreenPreview() {
     MaterialTheme {
-        HomeScreen(modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background))
+        HomeContent(
+            modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background),
+            state = HomeState(
+                userName = "Test User",
+                sensors = listOf(
+                    SensorVO(
+                        id = "1",
+                        name = "manoleteeeeeeeeeeeeeeee",
+                        temp = 27.0,
+                        humidity = 69,
+                        batteryPercentage = 36,
+                        lastUpdate = "17/01/2026 13:30:00"
+                    ),
+                    SensorVO(
+                        id = "2",
+                        name = "manolete2",
+                        temp = 25.0,
+                        humidity = 70,
+                        batteryPercentage = null,
+                        lastUpdate = "17/01/2026 14:00:00"
+                    )
+                )
+            )
+        )
     }
 }
