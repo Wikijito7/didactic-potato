@@ -40,17 +40,17 @@ class SensorRepository(
         return try {
             val cachedSensors = sensorLocalDataSource.getAllSensors().first()
             Log.d(TAG, "Cached sensors count: ${cachedSensors.size}")
-            
+
             if (cachedSensors.isNotEmpty()) {
                 val firstSensor = cachedSensors.first()
                 val age = System.currentTimeMillis() - firstSensor.lastUpdated
                 Log.d(TAG, "First sensor lastUpdated: ${firstSensor.lastUpdated}, age: ${age}ms, expired: ${age > CACHE_EXPIRY_MS}")
             }
-            
+
             // Check if cache is expired (if we have any data and it's not older than 2 minutes)
-            val isCacheValid = cachedSensors.isNotEmpty() && 
-                cachedSensors.all { 
-                    System.currentTimeMillis() - it.lastUpdated <= CACHE_EXPIRY_MS 
+            val isCacheValid = cachedSensors.isNotEmpty() &&
+                cachedSensors.all {
+                    System.currentTimeMillis() - it.lastUpdated <= CACHE_EXPIRY_MS
                 }
 
             Log.d(TAG, "isCacheValid=$isCacheValid, forceRefresh=$forceRefresh")
@@ -65,7 +65,7 @@ class SensorRepository(
                 // Clear old cache and save new data
                 sensorLocalDataSource.deleteAllSensors()
                 Log.d(TAG, "Cleared old cache")
-                
+
                 val dbos = sensors.map { it.toDbo() }
                 sensorLocalDataSource.saveSensors(dbos)
                 Log.d(TAG, "Saved ${dbos.size} sensors to cache")

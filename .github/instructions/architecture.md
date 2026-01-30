@@ -142,3 +142,9 @@ data/
 - Use DBO naming for Room entities (not Entity)
 - Clear cache before saving new data to prevent accumulation
 - Preserve API response order by avoiding ORDER BY in DAO queries
+
+### File Formatting Rules
+- **All files must end with a newline character** (POSIX standard)
+- This is required for proper git diffs, Unix tools compatibility, and IDE consistency
+- Check: `tail -c 1 filename` should return empty (means newline exists)
+- Fix: `echo "" >> filename` adds newline if missing
