@@ -3,7 +3,6 @@ package es.wokis.didacticpotato.data.api
 import es.wokis.didacticpotato.domain.model.BatteryBO
 import es.wokis.didacticpotato.domain.model.SensorBO
 
-// DTO to BO mappers
 fun SensorDataDTO.toBO() = SensorBO(
     name = name.orEmpty(),
     temperature = data?.temp ?: 0.0,
