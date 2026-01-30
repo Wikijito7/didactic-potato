@@ -1,10 +1,10 @@
-package es.wokis.didacticpotato.data.sensor
+package es.wokis.didacticpotato.data.remote.datasource
 
 import es.wokis.didacticpotato.data.api.SensorApi
 import es.wokis.didacticpotato.data.api.SimpleSensorsResponseDTO
 import es.wokis.didacticpotato.data.api.SensorsResponseDTO
 
-class SensorDataSource(private val sensorApi: SensorApi) {
+class SensorRemoteDataSource(private val sensorApi: SensorApi) {
 
     suspend fun getLastSensorData(): SimpleSensorsResponseDTO {
         return sensorApi.getLastSensorData()
