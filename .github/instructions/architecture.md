@@ -23,7 +23,23 @@ API Layer (External) ← DataSource ← Repository ← UseCase ← ViewModel ←
   - DataSources: Abstract API/database access
   - Repositories: Implement business data access
   - Local storage: Room entities and DAOs
-- **Location**: `data/repository/`, `data/local/`
+- **Location**: `data/repository/`, `data/local/`, `data/remote/`
+
+#### DataSource Organization (Critical)
+Both local and remote datasources must follow the same structure:
+```
+data/
+├── local/
+│   └── datasource/
+│       ├── SensorLocalDataSource.kt
+│       └── UserLocalDataSource.kt
+├── remote/
+│   └── datasource/
+│       ├── AuthRemoteDataSource.kt
+│       └── SensorRemoteDataSource.kt
+```
+
+**Rule**: Never scatter remote datasources in feature folders (e.g., `data/auth/`, `data/sensor/`). Always use `data/remote/datasource/` for consistency.
 
 ### Domain Layer
 - **Purpose**: Business logic independent of frameworks
@@ -106,8 +122,29 @@ API Layer (External) ← DataSource ← Repository ← UseCase ← ViewModel ←
 - **SLF4J Integration**: Android-compatible logging with custom Ktor logger
 - **Levels**: ALL for debugging, NONE for production
 - **Security**: Avoid logging sensitive data (tokens, passwords)
+
+### Room Database & Caching
+- **Version Compatibility**: Kotlin 2.3.0 + Room 2.8.4 + KSP 2.3.4
+- **Naming**: Use DBO (Database Object) not Entity (e.g., `SensorDBO`)
+- **Cache Pattern**: Cache-aside with expiration check
+- **Timestamp**: Add `lastUpdated` field, update with `System.currentTimeMillis()`
+- **Clear Before Save**: Always `deleteAll()` before inserting new data
+- **Order Preservation**: Don't use `ORDER BY` in DAOs, preserve API response order
+- **Column Names**: Use snake_case (`last_updated`) in SQL, not camelCase
+- **Check Cache First**: Verify `hasCachedData()` before showing loading states
+
+### Code Quality Rules
 - Use .orEmpty() for strings/collections instead of ?: default
 - Make optional API fields nullable in DTOs/BOs/VOs
 - Secure token storage with EncryptedSharedPreferences
 - Use koinInject for ViewModel injection in Compose
 - Add @SerialName to DTOs for R8 compatibility
+- Use DBO naming for Room entities (not Entity)
+- Clear cache before saving new data to prevent accumulation
+- Preserve API response order by avoiding ORDER BY in DAO queries
+
+### File Formatting Rules
+- **All files must end with a newline character** (POSIX standard)
+- This is required for proper git diffs, Unix tools compatibility, and IDE consistency
+- Check: `tail -c 1 filename` should return empty (means newline exists)
+- Fix: `echo "" >> filename` adds newline if missing
