@@ -1,4 +1,4 @@
-package es.wokis.didacticpotato.data.auth
+package es.wokis.didacticpotato.data.remote.datasource
 
 import es.wokis.didacticpotato.data.api.AuthApi
 import es.wokis.didacticpotato.data.api.LoginRequestDTO
@@ -6,7 +6,7 @@ import es.wokis.didacticpotato.data.api.LoginResponseDTO
 import es.wokis.didacticpotato.data.api.RegisterRequestDTO
 import es.wokis.didacticpotato.data.api.AcknowledgeDTO
 
-class AuthDataSource(private val authApi: AuthApi) {
+class AuthRemoteDataSource(private val authApi: AuthApi) {
 
     suspend fun login(username: String, password: String): LoginResponseDTO {
         val request = LoginRequestDTO(username, password)
