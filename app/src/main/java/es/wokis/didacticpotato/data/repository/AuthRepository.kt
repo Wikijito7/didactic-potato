@@ -1,7 +1,7 @@
 package es.wokis.didacticpotato.data.repository
 
-import es.wokis.didacticpotato.data.remote.datasource.AuthRemoteDataSource
 import es.wokis.didacticpotato.data.auth.TokenProvider
+import es.wokis.didacticpotato.data.remote.datasource.AuthRemoteDataSource
 
 class AuthRepository(
     private val authRemoteDataSource: AuthRemoteDataSource,

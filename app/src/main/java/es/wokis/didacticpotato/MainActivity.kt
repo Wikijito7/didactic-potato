@@ -69,14 +69,14 @@ fun DidacticpotatoApp() {
     val tokenProvider = koinInject<TokenProvider>()
     val settingsRepository = remember { SettingsRepository(context) }
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
-    
+
     // Auth state
     var showAuth by rememberSaveable { mutableStateOf(false) }
     var isRegisterMode by rememberSaveable { mutableStateOf(false) }
-    
+
     // Profile sub-screen navigation
     var profileSubScreen by rememberSaveable { mutableStateOf<ProfileSubScreen?>(null) }
-    
+
     // Apply secure screen flag based on settings
     val activity = context as? ComponentActivity
     DisposableEffect(Unit) {
@@ -162,7 +162,7 @@ fun DidacticpotatoApp() {
                             ProfileSubScreen.OPTIONS -> OptionsScreen(
                                 modifier = Modifier.padding(innerPadding),
                                 onNavigateBack = { profileSubScreen = null },
-                                onSetup2FA = { 
+                                onSetup2FA = {
                                     // TODO: Navigate to 2FA setup screen
                                     println("Navigate to 2FA setup")
                                 },

@@ -1,8 +1,8 @@
 package es.wokis.didacticpotato.data.remote.datasource
 
 import es.wokis.didacticpotato.data.api.SensorApi
-import es.wokis.didacticpotato.data.api.SimpleSensorsResponseDTO
 import es.wokis.didacticpotato.data.api.SensorsResponseDTO
+import es.wokis.didacticpotato.data.api.SimpleSensorsResponseDTO
 
 class SensorRemoteDataSource(private val sensorApi: SensorApi) {
 

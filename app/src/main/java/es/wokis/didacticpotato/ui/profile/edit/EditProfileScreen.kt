@@ -58,7 +58,7 @@ fun EditProfileScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    
+
     // 2FA Manager
     val twoFactorAuthManager: TwoFactorAuthManager = koinInject()
     val challengeState by twoFactorAuthManager.challengeState.collectAsState()
@@ -84,7 +84,7 @@ fun EditProfileScreen(
             }
         }
     }
-    
+
     // Handle 2FA error state
     if (challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Error) {
         val errorMessage = (challengeState as TwoFactorAuthManager.TwoFactorChallengeState.Error).message
@@ -229,9 +229,9 @@ fun EditProfileScreen(
                         onClick = viewModel::changePassword,
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !state.isLoading &&
-                                state.currentPassword.isNotBlank() &&
-                                state.newPassword.isNotBlank() &&
-                                state.confirmPassword.isNotBlank()
+                            state.currentPassword.isNotBlank() &&
+                            state.newPassword.isNotBlank() &&
+                            state.confirmPassword.isNotBlank()
                     ) {
                         if (state.isLoading) {
                             CircularProgressIndicator(
@@ -247,14 +247,16 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
-        
+
         // 2FA Dialog
         val is2FARequired = challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Required
         val is2FALoading = challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Loading
         val error2FA = if (challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Error) {
             (challengeState as TwoFactorAuthManager.TwoFactorChallengeState.Error).message
-        } else null
-        
+        } else {
+            null
+        }
+
         TwoFactorAuthDialog(
             isVisible = is2FARequired || is2FALoading,
             isLoading = is2FALoading,

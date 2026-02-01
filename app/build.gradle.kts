@@ -1,11 +1,10 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -85,8 +84,12 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
+    // Detekt formatting
+    detektPlugins(libs.detekt.formatting)
+
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -99,4 +102,20 @@ dependencies {
 
 kotlin {
     jvmToolchain(17)
+}
+
+detekt {
+    config.from(files("$rootDir/detekt.yml"))
+    parallel = true
+    buildUponDefaultConfig = true
+    allRules = false
+    autoCorrect = true
+
+    reports {
+        html.required.set(true)
+        md.required.set(true)
+        xml.required.set(false)
+        txt.required.set(false)
+        sarif.required.set(false)
+    }
 }

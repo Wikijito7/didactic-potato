@@ -33,16 +33,17 @@ class UserRepository(
 
     suspend fun hasCachedData(): Boolean {
         val cachedUser = userLocalDataSource.getCurrentUser().first()
-        return cachedUser != null && 
+        return cachedUser != null &&
             System.currentTimeMillis() - cachedUser.lastUpdated <= CACHE_EXPIRY_MS
     }
 
     suspend fun getUser(forceRefresh: Boolean = false): Result<UserBO> {
         return try {
             val cachedUser = userLocalDataSource.getCurrentUser().first()
-            
-            if (forceRefresh || cachedUser == null || 
-                System.currentTimeMillis() - cachedUser.lastUpdated > CACHE_EXPIRY_MS) {
+
+            if (forceRefresh || cachedUser == null ||
+                System.currentTimeMillis() - cachedUser.lastUpdated > CACHE_EXPIRY_MS
+            ) {
                 // Fetch from remote
                 val user = userApi.getUser().toBO()
 
@@ -87,27 +88,27 @@ class UserRepository(
     suspend fun deleteAccount(): Result<Boolean> {
         return try {
             val response = userApi.deleteAccount()
-            
+
             // Check if 2FA is required
             if (response.isTwoFactorChallenge()) {
                 val challenge = response.extractTwoFactorChallenge()
                     ?: throw IllegalStateException("Failed to extract 2FA challenge")
-                
+
                 Log.d(TAG, "2FA required for delete account")
-                
+
                 // Request 2FA code from user
                 val code = twoFactorAuthManager.requestTwoFactorCode(
                     authType = challenge.authType,
                     timestamp = challenge.timestamp,
                     actionDescription = "Delete account"
                 ) ?: return Result.failure(Exception("2FA code not provided"))
-                
+
                 // Retry with 2FA code
                 val retryResponse = userApi.deleteAccount(
                     totpCode = code,
                     timestamp = challenge.timestamp
                 )
-                
+
                 if (retryResponse.status.isSuccess()) {
                     twoFactorAuthManager.onTwoFactorSuccess()
                     Result.success(true)
