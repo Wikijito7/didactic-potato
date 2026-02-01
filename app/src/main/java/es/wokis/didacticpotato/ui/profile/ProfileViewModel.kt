@@ -40,7 +40,7 @@ class ProfileViewModel(
                 ProfileState(
                     username = user?.username ?: "Guest",
                     emailVerified = user?.emailVerified ?: false,
-                    verificationCooldownMs = if (settingsRepository.canRequestVerificationEmail()) 0L else settingsRepository.getVerificationEmailCooldownRemaining(),
+                    verificationCooldownMs = calculateVerificationCooldown(),
                     sensors = sensors.map { it.toVO() },
                     isLoading = false,
                     error = null
@@ -87,7 +87,7 @@ class ProfileViewModel(
             _state.value = ProfileState(
                 username = userResult.getOrNull()?.username ?: "Guest",
                 emailVerified = userResult.getOrNull()?.emailVerified ?: false,
-                verificationCooldownMs = if (settingsRepository.canRequestVerificationEmail()) 0L else settingsRepository.getVerificationEmailCooldownRemaining(),
+                verificationCooldownMs = calculateVerificationCooldown(),
                 sensors = sensors,
                 isLoading = false,
                 error = userResult.exceptionOrNull()?.message
@@ -147,5 +147,13 @@ class ProfileViewModel(
 
     fun clearResendSuccess() {
         _state.value = _state.value.copy(resendSuccess = null)
+    }
+
+    private fun calculateVerificationCooldown(): Long {
+        return if (settingsRepository.canRequestVerificationEmail()) {
+            0L
+        } else {
+            settingsRepository.getVerificationEmailCooldownRemaining()
+        }
     }
 }

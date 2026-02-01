@@ -61,176 +61,285 @@ fun OptionsScreen(
     var showCloseSessionsDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
 
+    HandleMessages(
+        state = state,
+        snackbarHostState = snackbarHostState,
+        onClearMessages = viewModel::clearMessages
+    )
+
+    Scaffold(
+        modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = { OptionsTopBar(onNavigateBack = onNavigateBack) }
+    ) { paddingValues ->
+        OptionsContent(
+            state = state,
+            onSetup2FA = onSetup2FA,
+            onTogglePrivateScreen = viewModel::togglePrivateScreen,
+            onCloseSessionsClick = { showCloseSessionsDialog = true },
+            onDeleteAccountClick = { showDeleteAccountDialog = true },
+            modifier = Modifier.padding(paddingValues)
+        )
+    }
+
+    DestructiveActionDialogs(
+        state = state,
+        showCloseSessionsDialog = showCloseSessionsDialog,
+        showDeleteAccountDialog = showDeleteAccountDialog,
+        onDismissCloseSessions = { showCloseSessionsDialog = false },
+        onDismissDeleteAccount = { showDeleteAccountDialog = false },
+        onCloseAllSessions = viewModel::closeAllSessions,
+        onDeleteAccount = viewModel::deleteAccount,
+        onLogout = onLogout
+    )
+}
+
+@Composable
+private fun HandleMessages(
+    state: OptionsState,
+    snackbarHostState: SnackbarHostState,
+    onClearMessages: () -> Unit
+) {
     state.error?.let { error ->
         LaunchedEffect(error) {
             snackbarHostState.showSnackbar(error)
-            viewModel.clearMessages()
+            onClearMessages()
         }
     }
 
     state.successMessage?.let { message ->
         LaunchedEffect(message) {
             snackbarHostState.showSnackbar(message)
-            viewModel.clearMessages()
+            onClearMessages()
         }
     }
+}
 
-    Scaffold(
-        modifier = modifier,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("Options") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OptionsTopBar(onNavigateBack: () -> Unit) {
+    TopAppBar(
+        title = { Text("Options") },
+        navigationIcon = {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back"
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun OptionsContent(
+    state: OptionsState,
+    onSetup2FA: () -> Unit,
+    onTogglePrivateScreen: (Boolean) -> Unit,
+    onCloseSessionsClick: () -> Unit,
+    onDeleteAccountClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        SecuritySection(
+            is2FAEnabled = state.is2FAEnabled,
+            isPrivateScreenEnabled = state.isPrivateScreenEnabled,
+            onSetup2FA = onSetup2FA,
+            onTogglePrivateScreen = onTogglePrivateScreen
+        )
+
+        AccountActionsSection(
+            onCloseSessionsClick = onCloseSessionsClick,
+            onDeleteAccountClick = onDeleteAccountClick
+        )
+    }
+}
+
+@Composable
+private fun SecuritySection(
+    is2FAEnabled: Boolean,
+    isPrivateScreenEnabled: Boolean,
+    onSetup2FA: () -> Unit,
+    onTogglePrivateScreen: (Boolean) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Security",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TwoFactorAuthListItem(
+                isEnabled = is2FAEnabled,
+                onSetup2FA = onSetup2FA
+            )
+
+            HorizontalDivider()
+
+            PrivateScreenListItem(
+                isEnabled = isPrivateScreenEnabled,
+                onToggle = onTogglePrivateScreen
             )
         }
-    ) { paddingValues ->
+    }
+}
+
+@Composable
+private fun TwoFactorAuthListItem(
+    isEnabled: Boolean,
+    onSetup2FA: () -> Unit
+) {
+    ListItem(
+        headlineContent = { Text("Two-Factor Authentication") },
+        supportingContent = {
+            Text(
+                if (isEnabled) "Enabled" else "Not enabled",
+                style = MaterialTheme.typography.bodySmall
+            )
+        },
+        leadingContent = {
+            Icon(
+                imageVector = Icons.Filled.Security,
+                contentDescription = null
+            )
+        },
+        modifier = Modifier.clickable(onClick = onSetup2FA)
+    )
+}
+
+@Composable
+private fun PrivateScreenListItem(
+    isEnabled: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    ListItem(
+        headlineContent = { Text("Private Screen") },
+        supportingContent = {
+            Text(
+                "Hide content in recent apps",
+                style = MaterialTheme.typography.bodySmall
+            )
+        },
+        leadingContent = {
+            Icon(
+                imageVector = Icons.Filled.Lock,
+                contentDescription = null
+            )
+        },
+        trailingContent = {
+            Switch(
+                checked = isEnabled,
+                onCheckedChange = onToggle
+            )
+        }
+    )
+}
+
+@Composable
+private fun AccountActionsSection(
+    onCloseSessionsClick: () -> Unit,
+    onDeleteAccountClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
-            // Security Section
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Security",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+            Text(
+                text = "Account Actions",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error
+            )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                    // 2FA Option
-                    ListItem(
-                        headlineContent = { Text("Two-Factor Authentication") },
-                        supportingContent = {
-                            Text(
-                                if (state.is2FAEnabled) "Enabled" else "Not enabled",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = Icons.Filled.Security,
-                                contentDescription = null
-                            )
-                        },
-                        modifier = Modifier.clickable { onSetup2FA() }
-                    )
+            CloseAllSessionsListItem(onClick = onCloseSessionsClick)
 
-                    HorizontalDivider()
+            HorizontalDivider()
 
-                    // Private Screen Option
-                    ListItem(
-                        headlineContent = { Text("Private Screen") },
-                        supportingContent = {
-                            Text(
-                                "Hide content in recent apps",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = Icons.Filled.Lock,
-                                contentDescription = null
-                            )
-                        },
-                        trailingContent = {
-                            Switch(
-                                checked = state.isPrivateScreenEnabled,
-                                onCheckedChange = viewModel::togglePrivateScreen
-                            )
-                        }
-                    )
-                }
-            }
-
-            // Account Actions Section
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Account Actions",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.error
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Close All Sessions
-                    ListItem(
-                        headlineContent = {
-                            Text(
-                                "Close All Sessions",
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        },
-                        supportingContent = {
-                            Text(
-                                "Sign out from all devices",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        },
-                        modifier = Modifier.clickable { showCloseSessionsDialog = true }
-                    )
-
-                    HorizontalDivider()
-
-                    // Delete Account
-                    ListItem(
-                        headlineContent = {
-                            Text(
-                                "Delete Account",
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        },
-                        supportingContent = {
-                            Text(
-                                "Permanently remove your account",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        },
-                        modifier = Modifier.clickable { showDeleteAccountDialog = true }
-                    )
-                }
-            }
+            DeleteAccountListItem(onClick = onDeleteAccountClick)
         }
     }
+}
 
-    // Close All Sessions Confirmation Dialog
+@Composable
+private fun CloseAllSessionsListItem(onClick: () -> Unit) {
+    ListItem(
+        headlineContent = {
+            Text(
+                "Close All Sessions",
+                color = MaterialTheme.colorScheme.error
+            )
+        },
+        supportingContent = {
+            Text(
+                "Sign out from all devices",
+                style = MaterialTheme.typography.bodySmall
+            )
+        },
+        leadingContent = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error
+            )
+        },
+        modifier = Modifier.clickable(onClick = onClick)
+    )
+}
+
+@Composable
+private fun DeleteAccountListItem(onClick: () -> Unit) {
+    ListItem(
+        headlineContent = {
+            Text(
+                "Delete Account",
+                color = MaterialTheme.colorScheme.error
+            )
+        },
+        supportingContent = {
+            Text(
+                "Permanently remove your account",
+                style = MaterialTheme.typography.bodySmall
+            )
+        },
+        leadingContent = {
+            Icon(
+                imageVector = Icons.Filled.Delete,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error
+            )
+        },
+        modifier = Modifier.clickable(onClick = onClick)
+    )
+}
+
+@Composable
+private fun DestructiveActionDialogs(
+    state: OptionsState,
+    showCloseSessionsDialog: Boolean,
+    showDeleteAccountDialog: Boolean,
+    onDismissCloseSessions: () -> Unit,
+    onDismissDeleteAccount: () -> Unit,
+    onCloseAllSessions: (() -> Unit, (String) -> Unit) -> Unit,
+    onDeleteAccount: (() -> Unit, (String) -> Unit) -> Unit,
+    onLogout: () -> Unit
+) {
     if (showCloseSessionsDialog) {
         DestructiveActionDialog(
             title = "Close All Sessions?",
@@ -238,19 +347,18 @@ fun OptionsScreen(
             confirmText = "Close Sessions",
             isLoading = state.isLoading,
             onConfirm = {
-                viewModel.closeAllSessions(
-                    onSuccess = {
-                        showCloseSessionsDialog = false
+                onCloseAllSessions(
+                    {
+                        onDismissCloseSessions()
                         onLogout()
                     },
-                    onError = { showCloseSessionsDialog = false }
+                    { onDismissCloseSessions() }
                 )
             },
-            onDismiss = { showCloseSessionsDialog = false }
+            onDismiss = onDismissCloseSessions
         )
     }
 
-    // Delete Account Confirmation Dialog
     if (showDeleteAccountDialog) {
         DestructiveActionDialog(
             title = "Delete Account?",
@@ -258,15 +366,15 @@ fun OptionsScreen(
             confirmText = "Delete Account",
             isLoading = state.isLoading,
             onConfirm = {
-                viewModel.deleteAccount(
-                    onSuccess = {
-                        showDeleteAccountDialog = false
+                onDeleteAccount(
+                    {
+                        onDismissDeleteAccount()
                         onLogout()
                     },
-                    onError = { showDeleteAccountDialog = false }
+                    { onDismissDeleteAccount() }
                 )
             },
-            onDismiss = { showDeleteAccountDialog = false }
+            onDismiss = onDismissDeleteAccount
         )
     }
 }

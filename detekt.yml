@@ -2,8 +2,8 @@
 # https://detekt.dev/docs/introduction/configurations
 
 build:
-  maxIssues: 500
-  excludeCorrectable: true
+  maxIssues: 40
+  excludeCorrectable: false
 
 config:
   validation: true

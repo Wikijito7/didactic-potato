@@ -20,8 +20,9 @@ suspend inline fun <reified T> HttpClient.executeWithTwoFactorRetry(
 
         // Check if 2FA is required
         if (response.isTwoFactorChallenge()) {
-            val challenge = response.extractTwoFactorChallenge()
-                ?: throw IllegalStateException("Failed to extract 2FA challenge")
+            val challenge = checkNotNull(response.extractTwoFactorChallenge()) {
+                "Failed to extract 2FA challenge"
+            }
 
             Log.d("TwoFactorAuth", "2FA challenge received, requesting code...")
 
@@ -55,5 +56,5 @@ suspend inline fun <reified T> HttpClient.executeWithTwoFactorRetry(
 suspend fun HttpClient.blockWithTwoFactorHeaders(code: String, timestamp: Long): HttpResponse {
     // This is a placeholder - the actual implementation needs to re-execute the original request
     // with added headers. This requires passing the original request details.
-    throw NotImplementedError("Must provide custom retry logic with headers")
+    TODO("Implement custom retry logic with 2FA headers")
 }

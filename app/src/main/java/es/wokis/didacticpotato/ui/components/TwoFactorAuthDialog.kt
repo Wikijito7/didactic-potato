@@ -47,79 +47,39 @@ fun TwoFactorAuthDialog(
         }
     }
 
+    val onCodeChanged: (String) -> Unit = { newCode ->
+        if (newCode.length <= MAX_2FA_CODE_LENGTH && newCode.all { char -> char.isDigit() }) {
+            code = newCode
+        }
+    }
+
+    val onVerifyClick: () -> Unit = {
+        val validationError = validateCode(code)
+        if (validationError != null) {
+            localError = validationError
+        } else {
+            onConfirm(code)
+            code = "" // Reset after submit
+        }
+    }
+
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismiss() },
-        title = {
-            Text(
-                text = "Two-Factor Authentication",
-                style = MaterialTheme.typography.headlineSmall
+        title = { TwoFactorAuthTitle() },
+        text = {
+            TwoFactorAuthContent(
+                code = code,
+                error = error,
+                localError = localError,
+                onCodeChanged = onCodeChanged
             )
         },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Please enter your 2FA code to continue",
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = code,
-                    onValueChange = {
-                        // Only allow digits, max 6 characters
-                        if (it.length <= 6 && it.all { char -> char.isDigit() }) {
-                            code = it
-                        }
-                    },
-                    label = { Text("2FA Code") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    ),
-                    isError = error != null || localError != null,
-                    supportingText = when {
-                        error != null -> error
-                        localError != null -> localError
-                        else -> "Enter the 6-digit code from your authenticator app"
-                    }?.let { msg -> { Text(msg) } },
-                    singleLine = true
-                )
-            }
-        },
         confirmButton = {
-            Button(
-                onClick = {
-                    when {
-                        code.isBlank() -> localError = "Code is required"
-                        code.length != 6 -> localError = "Code must be 6 digits"
-                        else -> {
-                            onConfirm(code)
-                            code = "" // Reset after submit
-                        }
-                    }
-                },
-                enabled = !isLoading && code.length == 6
-            ) {
-                if (isLoading) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
-                        )
-                        Text("Verifying...")
-                    }
-                } else {
-                    Text("Verify")
-                }
-            }
+            TwoFactorAuthConfirmButton(
+                isLoading = isLoading,
+                isCodeValid = code.length == MAX_2FA_CODE_LENGTH,
+                onVerifyClick = onVerifyClick
+            )
         },
         dismissButton = {
             TextButton(
@@ -130,4 +90,107 @@ fun TwoFactorAuthDialog(
             }
         }
     )
+}
+
+@Composable
+private fun TwoFactorAuthTitle() {
+    Text(
+        text = "Two-Factor Authentication",
+        style = MaterialTheme.typography.headlineSmall
+    )
+}
+
+@Composable
+private fun TwoFactorAuthContent(
+    code: String,
+    error: String?,
+    localError: String?,
+    onCodeChanged: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Please enter your 2FA code to continue",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TwoFactorCodeField(
+            code = code,
+            error = error,
+            localError = localError,
+            onCodeChanged = onCodeChanged
+        )
+    }
+}
+
+@Composable
+private fun TwoFactorCodeField(
+    code: String,
+    error: String?,
+    localError: String?,
+    onCodeChanged: (String) -> Unit
+) {
+    val supportingText = when {
+        error != null -> error
+        localError != null -> localError
+        else -> "Enter the 6-digit code from your authenticator app"
+    }
+
+    OutlinedTextField(
+        value = code,
+        onValueChange = onCodeChanged,
+        label = { Text("2FA Code") },
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number
+        ),
+        isError = error != null || localError != null,
+        supportingText = { Text(supportingText) },
+        singleLine = true
+    )
+}
+
+@Composable
+private fun TwoFactorAuthConfirmButton(
+    isLoading: Boolean,
+    isCodeValid: Boolean,
+    onVerifyClick: () -> Unit
+) {
+    Button(
+        onClick = onVerifyClick,
+        enabled = !isLoading && isCodeValid
+    ) {
+        if (isLoading) {
+            TwoFactorAuthLoadingIndicator()
+        } else {
+            Text("Verify")
+        }
+    }
+}
+
+@Composable
+private fun TwoFactorAuthLoadingIndicator() {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(16.dp),
+            strokeWidth = 2.dp
+        )
+        Text("Verifying...")
+    }
+}
+
+private const val MAX_2FA_CODE_LENGTH = 6
+
+private fun validateCode(code: String): String? = when {
+    code.isBlank() -> "Code is required"
+    code.length != MAX_2FA_CODE_LENGTH -> "Code must be 6 digits"
+    else -> null
 }

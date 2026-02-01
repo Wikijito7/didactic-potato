@@ -71,6 +71,57 @@ fun EditProfileScreen(
         }
     )
 
+    HandleMessages(
+        state = state,
+        snackbarHostState = snackbarHostState
+    )
+
+    Handle2FAError(
+        challengeState = challengeState,
+        snackbarHostState = snackbarHostState
+    )
+
+    Scaffold(
+        modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = { EditProfileTopBar(onNavigateBack = onNavigateBack) }
+    ) { paddingValues ->
+        val callbacks = remember {
+            EditProfileCallbacks(
+                onImageClick = {
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                onUsernameChange = viewModel::onUsernameChange,
+                onEmailChange = viewModel::onEmailChange,
+                onCurrentPasswordChange = viewModel::onCurrentPasswordChange,
+                onNewPasswordChange = viewModel::onNewPasswordChange,
+                onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
+                onSaveProfile = viewModel::saveProfile,
+                onChangePassword = viewModel::changePassword
+            )
+        }
+
+        EditProfileContent(
+            state = state,
+            callbacks = callbacks,
+            modifier = Modifier.padding(paddingValues)
+        )
+
+        TwoFactorAuthSection(
+            challengeState = challengeState,
+            onDismiss = viewModel::cancelTwoFactorChallenge,
+            onConfirm = viewModel::submitTwoFactorCode
+        )
+    }
+}
+
+@Composable
+private fun HandleMessages(
+    state: EditProfileState,
+    snackbarHostState: SnackbarHostState
+) {
     state.error?.let { error ->
         LaunchedEffect(error) {
             snackbarHostState.showSnackbar(error)
@@ -84,187 +135,241 @@ fun EditProfileScreen(
             }
         }
     }
+}
 
-    // Handle 2FA error state
+@Composable
+private fun Handle2FAError(
+    challengeState: TwoFactorAuthManager.TwoFactorChallengeState,
+    snackbarHostState: SnackbarHostState
+) {
     if (challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Error) {
-        val errorMessage = (challengeState as TwoFactorAuthManager.TwoFactorChallengeState.Error).message
+        val errorMessage = challengeState.message
         LaunchedEffect(errorMessage) {
             snackbarHostState.showSnackbar(errorMessage)
         }
     }
+}
 
-    Scaffold(
-        modifier = modifier,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("Edit Profile") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditProfileTopBar(onNavigateBack: () -> Unit) {
+    TopAppBar(
+        title = { Text("Edit Profile") },
+        navigationIcon = {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowBack,
+                    contentDescription = "Back"
+                )
+            }
         }
-    ) { paddingValues ->
+    )
+}
+
+data class EditProfileCallbacks(
+    val onImageClick: () -> Unit,
+    val onUsernameChange: (String) -> Unit,
+    val onEmailChange: (String) -> Unit,
+    val onCurrentPasswordChange: (String) -> Unit,
+    val onNewPasswordChange: (String) -> Unit,
+    val onConfirmPasswordChange: (String) -> Unit,
+    val onSaveProfile: () -> Unit,
+    val onChangePassword: () -> Unit
+)
+
+@Composable
+private fun EditProfileContent(
+    state: EditProfileState,
+    callbacks: EditProfileCallbacks,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        ProfileImageSection(
+            imageUrl = state.imageUrl,
+            onImageClick = callbacks.onImageClick
+        )
+
+        ProfileInfoCard(
+            state = state,
+            onUsernameChange = callbacks.onUsernameChange,
+            onEmailChange = callbacks.onEmailChange,
+            onSaveProfile = callbacks.onSaveProfile
+        )
+
+        ChangePasswordCard(
+            state = state,
+            onCurrentPasswordChange = callbacks.onCurrentPasswordChange,
+            onNewPasswordChange = callbacks.onNewPasswordChange,
+            onConfirmPasswordChange = callbacks.onConfirmPasswordChange,
+            onChangePassword = callbacks.onChangePassword
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun ProfileInfoCard(
+    state: EditProfileState,
+    onUsernameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onSaveProfile: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Profile Image Section
-            ProfileImageSection(
-                imageUrl = state.imageUrl,
-                onImageClick = {
-                    photoPickerLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    )
-                }
+            Text(
+                text = "Profile Information",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
 
-            // Profile Information Card
-            Card(
-                modifier = Modifier.fillMaxWidth()
+            OutlinedTextField(
+                value = state.username,
+                onValueChange = onUsernameChange,
+                label = { Text("Username") },
+                modifier = Modifier.fillMaxWidth(),
+                isError = state.usernameError != null,
+                supportingText = state.usernameError?.let { error -> { Text(error) } }
+            )
+
+            OutlinedTextField(
+                value = state.email,
+                onValueChange = onEmailChange,
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth(),
+                isError = state.emailError != null,
+                supportingText = state.emailError?.let { error -> { Text(error) } }
+            )
+
+            Button(
+                onClick = onSaveProfile,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.isLoading
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = "Profile Information",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    OutlinedTextField(
-                        value = state.username,
-                        onValueChange = viewModel::onUsernameChange,
-                        label = { Text("Username") },
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = state.usernameError != null,
-                        supportingText = state.usernameError?.let { error -> { Text(error) } }
-                    )
-
-                    OutlinedTextField(
-                        value = state.email,
-                        onValueChange = viewModel::onEmailChange,
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = state.emailError != null,
-                        supportingText = state.emailError?.let { error -> { Text(error) } }
-                    )
-
-                    Button(
-                        onClick = viewModel::saveProfile,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !state.isLoading
-                    ) {
-                        if (state.isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text("Save Changes")
-                        }
-                    }
+                if (state.isLoading) {
+                    LoadingIndicator()
+                } else {
+                    Text("Save Changes")
                 }
             }
-
-            // Change Password Card
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = "Change Password",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    OutlinedTextField(
-                        value = state.currentPassword,
-                        onValueChange = viewModel::onCurrentPasswordChange,
-                        label = { Text("Current Password") },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = PasswordVisualTransformation(),
-                        isError = state.passwordError != null,
-                        supportingText = state.passwordError?.let { error -> { Text(error) } }
-                    )
-
-                    OutlinedTextField(
-                        value = state.newPassword,
-                        onValueChange = viewModel::onNewPasswordChange,
-                        label = { Text("New Password") },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = PasswordVisualTransformation(),
-                        isError = state.passwordError != null
-                    )
-
-                    OutlinedTextField(
-                        value = state.confirmPassword,
-                        onValueChange = viewModel::onConfirmPasswordChange,
-                        label = { Text("Confirm New Password") },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = PasswordVisualTransformation(),
-                        isError = state.confirmPasswordError != null,
-                        supportingText = state.confirmPasswordError?.let { error -> { Text(error) } }
-                    )
-
-                    Button(
-                        onClick = viewModel::changePassword,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !state.isLoading &&
-                            state.currentPassword.isNotBlank() &&
-                            state.newPassword.isNotBlank() &&
-                            state.confirmPassword.isNotBlank()
-                    ) {
-                        if (state.isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text("Change Password")
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
-
-        // 2FA Dialog
-        val is2FARequired = challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Required
-        val is2FALoading = challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Loading
-        val error2FA = if (challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Error) {
-            (challengeState as TwoFactorAuthManager.TwoFactorChallengeState.Error).message
-        } else {
-            null
-        }
-
-        TwoFactorAuthDialog(
-            isVisible = is2FARequired || is2FALoading,
-            isLoading = is2FALoading,
-            error = error2FA,
-            onDismiss = viewModel::cancelTwoFactorChallenge,
-            onConfirm = viewModel::submitTwoFactorCode
-        )
     }
+}
+
+@Composable
+private fun ChangePasswordCard(
+    state: EditProfileState,
+    onCurrentPasswordChange: (String) -> Unit,
+    onNewPasswordChange: (String) -> Unit,
+    onConfirmPasswordChange: (String) -> Unit,
+    onChangePassword: () -> Unit
+) {
+    val isPasswordFormValid = state.currentPassword.isNotBlank() &&
+        state.newPassword.isNotBlank() &&
+        state.confirmPassword.isNotBlank()
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Change Password",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            OutlinedTextField(
+                value = state.currentPassword,
+                onValueChange = onCurrentPasswordChange,
+                label = { Text("Current Password") },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation(),
+                isError = state.passwordError != null,
+                supportingText = state.passwordError?.let { error -> { Text(error) } }
+            )
+
+            OutlinedTextField(
+                value = state.newPassword,
+                onValueChange = onNewPasswordChange,
+                label = { Text("New Password") },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation(),
+                isError = state.passwordError != null
+            )
+
+            OutlinedTextField(
+                value = state.confirmPassword,
+                onValueChange = onConfirmPasswordChange,
+                label = { Text("Confirm New Password") },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation(),
+                isError = state.confirmPasswordError != null,
+                supportingText = state.confirmPasswordError?.let { error -> { Text(error) } }
+            )
+
+            Button(
+                onClick = onChangePassword,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.isLoading && isPasswordFormValid
+            ) {
+                if (state.isLoading) {
+                    LoadingIndicator()
+                } else {
+                    Text("Change Password")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingIndicator() {
+    CircularProgressIndicator(
+        modifier = Modifier.size(20.dp),
+        strokeWidth = 2.dp
+    )
+}
+
+@Composable
+private fun TwoFactorAuthSection(
+    challengeState: TwoFactorAuthManager.TwoFactorChallengeState,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    val is2FARequired = challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Required
+    val is2FALoading = challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Loading
+    val error2FA = if (challengeState is TwoFactorAuthManager.TwoFactorChallengeState.Error) {
+        challengeState.message
+    } else {
+        null
+    }
+
+    TwoFactorAuthDialog(
+        isVisible = is2FARequired || is2FALoading,
+        isLoading = is2FALoading,
+        error = error2FA,
+        onDismiss = onDismiss,
+        onConfirm = onConfirm
+    )
 }
 
 @Composable
