@@ -41,114 +41,176 @@ fun RegisterScreen(
     }
 
     Scaffold(modifier = modifier) { padding ->
-        Column(
+        RegisterContent(
+            state = state,
+            onEmailChanged = viewModel::onEmailChanged,
+            onUsernameChanged = viewModel::onUsernameChanged,
+            onPasswordChanged = viewModel::onPasswordChanged,
+            onConfirmPasswordChanged = viewModel::onConfirmPasswordChanged,
+            onRegisterClicked = viewModel::onRegisterClicked,
+            onNavigateToLogin = onNavigateToLogin,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        )
+    }
+}
+
+@Composable
+private fun RegisterContent(
+    state: RegisterState,
+    onEmailChanged: (String) -> Unit,
+    onUsernameChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onConfirmPasswordChanged: (String) -> Unit,
+    onRegisterClicked: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Register",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        RegisterForm(
+            state = state,
+            onEmailChanged = onEmailChanged,
+            onUsernameChanged = onUsernameChanged,
+            onPasswordChanged = onPasswordChanged,
+            onConfirmPasswordChanged = onConfirmPasswordChanged
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        RegisterButton(
+            isLoading = state.isLoading,
+            onRegisterClicked = onRegisterClicked
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        RegisterFooter(
+            onNavigateToLogin = onNavigateToLogin,
+            error = state.error
+        )
+    }
+}
+
+@Composable
+private fun RegisterForm(
+    state: RegisterState,
+    onEmailChanged: (String) -> Unit,
+    onUsernameChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onConfirmPasswordChanged: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = state.email,
+        onValueChange = onEmailChanged,
+        label = { Text("Email") },
+        modifier = Modifier.fillMaxWidth(),
+        isError = state.emailError != null,
+        supportingText = state.emailError?.let { error ->
+            @Composable { Text(error) }
+        }
+    )
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    OutlinedTextField(
+        value = state.username,
+        onValueChange = onUsernameChanged,
+        label = { Text("Username") },
+        modifier = Modifier.fillMaxWidth(),
+        isError = state.usernameError != null,
+        supportingText = state.usernameError?.let { error ->
+            @Composable { Text(error) }
+        }
+    )
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    OutlinedTextField(
+        value = state.password,
+        onValueChange = onPasswordChanged,
+        label = { Text("Password") },
+        visualTransformation = PasswordVisualTransformation(),
+        modifier = Modifier.fillMaxWidth(),
+        isError = state.passwordError != null,
+        supportingText = state.passwordError?.let { error ->
+            @Composable { Text(error) }
+        }
+    )
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    OutlinedTextField(
+        value = state.confirmPassword,
+        onValueChange = onConfirmPasswordChanged,
+        label = { Text("Confirm Password") },
+        visualTransformation = PasswordVisualTransformation(),
+        modifier = Modifier.fillMaxWidth(),
+        isError = state.confirmPasswordError != null,
+        supportingText = state.confirmPasswordError?.let { error ->
+            @Composable { Text(error) }
+        }
+    )
+}
+
+@Composable
+private fun RegisterButton(
+    isLoading: Boolean,
+    onRegisterClicked: () -> Unit
+) {
+    if (isLoading) {
+        CircularProgressIndicator()
+    } else {
+        Button(
+            onClick = onRegisterClicked,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Register",
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OutlinedTextField(
-                value = state.email,
-                onValueChange = viewModel::onEmailChanged,
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = state.emailError != null,
-                supportingText = state.emailError?.let { error ->
-                    @Composable { Text(error) }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = state.username,
-                onValueChange = viewModel::onUsernameChanged,
-                label = { Text("Username") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = state.usernameError != null,
-                supportingText = state.usernameError?.let { error ->
-                    @Composable { Text(error) }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = state.password,
-                onValueChange = viewModel::onPasswordChanged,
-                label = { Text("Password") },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                isError = state.passwordError != null,
-                supportingText = state.passwordError?.let { error ->
-                    @Composable { Text(error) }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = state.confirmPassword,
-                onValueChange = viewModel::onConfirmPasswordChanged,
-                label = { Text("Confirm Password") },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                isError = state.confirmPasswordError != null,
-                supportingText = state.confirmPasswordError?.let { error ->
-                    @Composable { Text(error) }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (state.isLoading) {
-                CircularProgressIndicator()
-            } else {
-                Button(
-                    onClick = viewModel::onRegisterClicked,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Register")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Already have an account?",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                TextButton(
-                    onClick = onNavigateToLogin
-                ) {
-                    Text("Login")
-                }
-            }
-
-            state.error?.let { error ->
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = error,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
+            Text("Register")
         }
     }
 }
 
+@Composable
+private fun RegisterFooter(
+    onNavigateToLogin: () -> Unit,
+    error: String?
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Already have an account?",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        TextButton(
+            onClick = onNavigateToLogin
+        ) {
+            Text("Login")
+        }
+    }
+
+    error?.let { errorMsg ->
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = errorMsg,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
+}
+
+@Suppress("UnusedPrivateMember") // Used by Android Studio Compose Preview
 @Preview(showBackground = true)
 @Composable
 private fun RegisterScreenPreview() {

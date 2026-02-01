@@ -71,8 +71,9 @@ class EditProfileViewModel(
 
             try {
                 // Read image bytes from URI
-                val imageBytes = readImageBytes(uri)
-                    ?: throw IllegalStateException("Failed to read image from URI")
+                val imageBytes = checkNotNull(readImageBytes(uri)) {
+                    "Failed to read image from URI"
+                }
 
                 // Upload image via repository
                 val result = userRepository.uploadImage(imageBytes)
@@ -107,6 +108,7 @@ class EditProfileViewModel(
                 inputStream.readBytes()
             }
         } catch (e: Exception) {
+            android.util.Log.e("EditProfileViewModel", "Failed to read image bytes from URI", e)
             null
         }
     }

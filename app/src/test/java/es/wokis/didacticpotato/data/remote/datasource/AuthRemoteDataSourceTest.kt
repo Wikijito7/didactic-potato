@@ -2,7 +2,6 @@ package es.wokis.didacticpotato.data.remote.datasource
 
 import es.wokis.didacticpotato.data.api.AcknowledgeDTO
 import es.wokis.didacticpotato.data.api.AuthApi
-import es.wokis.didacticpotato.data.api.LoginRequestDTO
 import es.wokis.didacticpotato.data.api.LoginResponseDTO
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -22,7 +21,6 @@ class AuthRemoteDataSourceTest {
         // Given
         val username = "testUser"
         val password = "testPass"
-        val expectedRequest = LoginRequestDTO(username, password)
         val expectedResponse = LoginResponseDTO(authToken = "token123")
 
         coEvery { authApi.login(any()) } returns expectedResponse

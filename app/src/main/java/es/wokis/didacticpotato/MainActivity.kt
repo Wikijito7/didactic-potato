@@ -77,7 +77,47 @@ fun DidacticpotatoApp() {
     // Profile sub-screen navigation
     var profileSubScreen by rememberSaveable { mutableStateOf<ProfileSubScreen?>(null) }
 
-    // Apply secure screen flag based on settings
+    ApplySecureScreenFlag(settingsRepository)
+
+    if (showAuth) {
+        AuthContent(
+            isRegisterMode = isRegisterMode,
+            onRegisterSuccess = {
+                showAuth = false
+                currentDestination = AppDestinations.PROFILE
+            },
+            onLoginSuccess = {
+                showAuth = false
+                currentDestination = AppDestinations.PROFILE
+            },
+            onToggleAuthMode = { isRegisterMode = !isRegisterMode }
+        )
+    } else {
+        MainAppContent(
+            currentDestination = currentDestination,
+            tokenProvider = tokenProvider,
+            profileSubScreen = profileSubScreen,
+            onDestinationChange = { destination ->
+                if (destination == AppDestinations.PROFILE && !tokenProvider.hasToken()) {
+                    showAuth = true
+                    isRegisterMode = false
+                } else {
+                    currentDestination = destination
+                }
+            },
+            onProfileSubScreenChange = { profileSubScreen = it },
+            onLogout = {
+                showAuth = true
+                isRegisterMode = false
+                profileSubScreen = null
+            }
+        )
+    }
+}
+
+@Composable
+private fun ApplySecureScreenFlag(settingsRepository: SettingsRepository) {
+    val context = LocalContext.current
     val activity = context as? ComponentActivity
     DisposableEffect(Unit) {
         val isPrivateEnabled = settingsRepository.isPrivateScreenEnabled()
@@ -90,100 +130,124 @@ fun DidacticpotatoApp() {
         }
         onDispose { }
     }
+}
 
-    if (showAuth) {
-        if (isRegisterMode) {
-            RegisterScreen(
-                onRegisterSuccess = {
-                    showAuth = false
-                    currentDestination = AppDestinations.PROFILE
-                },
-                onNavigateToLogin = { isRegisterMode = false }
-            )
-        } else {
-            LoginScreen(
-                onLoginSuccess = {
-                    showAuth = false
-                    currentDestination = AppDestinations.PROFILE
-                },
-                onNavigateToRegister = { isRegisterMode = true }
-            )
-        }
+@Composable
+private fun AuthContent(
+    isRegisterMode: Boolean,
+    onRegisterSuccess: () -> Unit,
+    onLoginSuccess: () -> Unit,
+    onToggleAuthMode: () -> Unit
+) {
+    if (isRegisterMode) {
+        RegisterScreen(
+            onRegisterSuccess = onRegisterSuccess,
+            onNavigateToLogin = onToggleAuthMode
+        )
     } else {
-        NavigationSuiteScaffold(
-            navigationSuiteItems = {
-                AppDestinations.entries.forEach {
-                    item(
-                        icon = {
-                            Icon(
-                                it.icon,
-                                contentDescription = it.label
-                            )
-                        },
-                        label = { Text(it.label) },
-                        selected = it == currentDestination,
-                        onClick = {
-                            if (it == AppDestinations.PROFILE && !tokenProvider.hasToken()) {
-                                showAuth = true
-                                isRegisterMode = false
-                            } else {
-                                currentDestination = it
-                                // Note: profileSubScreen state is preserved when switching tabs
-                                // It only resets when user explicitly navigates back or logs out
-                            }
-                        }
-                    )
-                }
-            }
-        ) {
-            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                when (currentDestination) {
-                    AppDestinations.HOME -> HomeScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        onSensorClick = { sensorId ->
-                            // TODO: Navigate to sensor detail screen
-                            println("Sensor clicked: $sensorId")
-                        },
-                        onAddSensorClick = {
-                            // TODO: Implement add sensor workflow (Bluetooth pairing with ESP32)
-                        }
-                    )
-                    AppDestinations.SENSORS -> Greeting(
-                        name = currentDestination.label,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                    AppDestinations.PROFILE -> {
-                        val profileViewModel = koinInject<ProfileViewModel>()
-                        when (profileSubScreen) {
-                            ProfileSubScreen.EDIT_PROFILE -> EditProfileScreen(
-                                modifier = Modifier.padding(innerPadding),
-                                onNavigateBack = { profileSubScreen = null }
-                            )
-                            ProfileSubScreen.OPTIONS -> OptionsScreen(
-                                modifier = Modifier.padding(innerPadding),
-                                onNavigateBack = { profileSubScreen = null },
-                                onSetup2FA = {
-                                    // TODO: Navigate to 2FA setup screen
-                                    println("Navigate to 2FA setup")
-                                },
-                                onLogout = {
-                                    // Navigate back to login
-                                    showAuth = true
-                                    isRegisterMode = false
-                                    profileSubScreen = null
-                                }
-                            )
-                            null -> ProfileScreen(
-                                modifier = Modifier.padding(innerPadding),
-                                onNavigateToEditProfile = { profileSubScreen = ProfileSubScreen.EDIT_PROFILE },
-                                onNavigateToOptions = { profileSubScreen = ProfileSubScreen.OPTIONS },
-                                onResendVerificationEmail = { profileViewModel.resendVerificationEmail() }
-                            )
-                        }
-                    }
-                }
+        LoginScreen(
+            onLoginSuccess = onLoginSuccess,
+            onNavigateToRegister = onToggleAuthMode
+        )
+    }
+}
+
+@Composable
+private fun MainAppContent(
+    currentDestination: AppDestinations,
+    tokenProvider: TokenProvider, // TODO: Verify if needed for auth state check - currently prepared for future use
+    profileSubScreen: ProfileSubScreen?,
+    onDestinationChange: (AppDestinations) -> Unit,
+    onProfileSubScreenChange: (ProfileSubScreen?) -> Unit,
+    onLogout: () -> Unit
+) {
+    NavigationSuiteScaffold(
+        navigationSuiteItems = {
+            AppDestinations.entries.forEach { destination ->
+                item(
+                    icon = {
+                        Icon(
+                            destination.icon,
+                            contentDescription = destination.label
+                        )
+                    },
+                    label = { Text(destination.label) },
+                    selected = destination == currentDestination,
+                    onClick = { onDestinationChange(destination) }
+                )
             }
         }
+    ) {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            AppDestinationContent(
+                currentDestination = currentDestination,
+                profileSubScreen = profileSubScreen,
+                innerPadding = innerPadding,
+                onProfileSubScreenChange = onProfileSubScreenChange,
+                onLogout = onLogout
+            )
+        }
+    }
+}
+
+@Composable
+private fun AppDestinationContent(
+    currentDestination: AppDestinations,
+    profileSubScreen: ProfileSubScreen?,
+    innerPadding: androidx.compose.foundation.layout.PaddingValues,
+    onProfileSubScreenChange: (ProfileSubScreen?) -> Unit,
+    onLogout: () -> Unit
+) {
+    when (currentDestination) {
+        AppDestinations.HOME -> HomeScreen(
+            modifier = Modifier.padding(innerPadding),
+            onSensorClick = { sensorId ->
+                println("Sensor clicked: $sensorId")
+            },
+            onAddSensorClick = {
+                println("Add sensor clicked")
+            }
+        )
+        AppDestinations.SENSORS -> Greeting(
+            name = currentDestination.label,
+            modifier = Modifier.padding(innerPadding)
+        )
+        AppDestinations.PROFILE -> ProfileDestination(
+            profileSubScreen = profileSubScreen,
+            innerPadding = innerPadding,
+            onProfileSubScreenChange = onProfileSubScreenChange,
+            onLogout = onLogout
+        )
+    }
+}
+
+@Composable
+private fun ProfileDestination(
+    profileSubScreen: ProfileSubScreen?,
+    innerPadding: androidx.compose.foundation.layout.PaddingValues,
+    onProfileSubScreenChange: (ProfileSubScreen?) -> Unit,
+    onLogout: () -> Unit
+) {
+    val profileViewModel = koinInject<ProfileViewModel>()
+    when (profileSubScreen) {
+        ProfileSubScreen.EDIT_PROFILE -> EditProfileScreen(
+            modifier = Modifier.padding(innerPadding),
+            onNavigateBack = { onProfileSubScreenChange(null) }
+        )
+        ProfileSubScreen.OPTIONS -> OptionsScreen(
+            modifier = Modifier.padding(innerPadding),
+            onNavigateBack = { onProfileSubScreenChange(null) },
+            onSetup2FA = {
+                println("Navigate to 2FA setup")
+            },
+            onLogout = onLogout
+        )
+        null -> ProfileScreen(
+            modifier = Modifier.padding(innerPadding),
+            onNavigateToEditProfile = { onProfileSubScreenChange(ProfileSubScreen.EDIT_PROFILE) },
+            onNavigateToOptions = { onProfileSubScreenChange(ProfileSubScreen.OPTIONS) },
+            onResendVerificationEmail = { profileViewModel.resendVerificationEmail() }
+        )
     }
 }
 

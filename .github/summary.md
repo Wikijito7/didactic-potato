@@ -23,6 +23,7 @@ This document summarizes the key knowledge and best practices established for th
 - Dependency injection for testability
 - Immutable data classes with StateFlow
 - Proper error handling in use cases
+- **Detekt static analysis** (max 50 weighted issues allowed)
 
 ## UI Patterns
 - Compose screens with ViewModel injection via `koinInject<VM>()`
@@ -53,7 +54,8 @@ This document summarizes the key knowledge and best practices established for th
 5. Create ViewModels with State management
 6. Build Compose UI with proper state handling
 7. Add error handling and loading states
-8. Test all layers thoroughly
+8. Run detekt static analysis (`./gradlew detekt`)
+9. Test all layers thoroughly
 
 ## File Structure
 ```

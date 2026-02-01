@@ -91,8 +91,9 @@ class UserRepository(
 
             // Check if 2FA is required
             if (response.isTwoFactorChallenge()) {
-                val challenge = response.extractTwoFactorChallenge()
-                    ?: throw IllegalStateException("Failed to extract 2FA challenge")
+                val challenge = checkNotNull(response.extractTwoFactorChallenge()) {
+                    "Failed to extract 2FA challenge"
+                }
 
                 Log.d(TAG, "2FA required for delete account")
 
@@ -141,8 +142,9 @@ class UserRepository(
 
             // Check if 2FA is required
             if (response.isTwoFactorChallenge()) {
-                val challenge = response.extractTwoFactorChallenge()
-                    ?: throw IllegalStateException("Failed to extract 2FA challenge")
+                val challenge = checkNotNull(response.extractTwoFactorChallenge()) {
+                    "Failed to extract 2FA challenge"
+                }
 
                 Log.d(TAG, "2FA required for update user")
 
@@ -212,8 +214,9 @@ class UserRepository(
 
             // Check if 2FA is required
             if (response.isTwoFactorChallenge()) {
-                val challenge = response.extractTwoFactorChallenge()
-                    ?: throw IllegalStateException("Failed to extract 2FA challenge")
+                val challenge = checkNotNull(response.extractTwoFactorChallenge()) {
+                    "Failed to extract 2FA challenge"
+                }
 
                 Log.d(TAG, "2FA required for upload image")
 
