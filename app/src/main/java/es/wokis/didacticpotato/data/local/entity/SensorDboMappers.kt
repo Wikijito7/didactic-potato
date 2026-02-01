@@ -16,7 +16,9 @@ fun SensorDBO.toBO(): SensorBO {
                 isCharging = batteryIsCharging,
                 percentage = batteryPercentage
             )
-        } else null
+        } else {
+            null
+        }
     )
 }
 

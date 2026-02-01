@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import es.wokis.didacticpotato.data.repository.SensorRepository
 import es.wokis.didacticpotato.data.repository.UserRepository
+import es.wokis.didacticpotato.domain.mappers.toVO
 import es.wokis.didacticpotato.domain.usecase.GetLastSensorsUseCase
 import es.wokis.didacticpotato.domain.usecase.GetUserUseCase
-import es.wokis.didacticpotato.domain.mappers.toVO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,13 +55,13 @@ class HomeViewModel(
     private fun loadData() {
         viewModelScope.launch {
             Log.d(TAG, "loadData() started")
-            
+
             // Check if we have cached data first (fast operation)
             val hasSensorCache = sensorRepository.hasCachedData()
             val hasUserCache = userRepository.hasCachedData()
             val hasCache = hasSensorCache || hasUserCache
             Log.d(TAG, "Cache check - sensor: $hasSensorCache, user: $hasUserCache")
-            
+
             // Only show loading if no cache available
             if (!hasCache) {
                 _state.value = _state.value.copy(isLoading = true, error = null)
@@ -77,7 +77,7 @@ class HomeViewModel(
             val sensorsResult = getLastSensorsUseCase(forceRefresh = false)
             val sensors = sensorsResult.getOrNull()?.map { it.toVO() }.orEmpty()
             Log.d(TAG, "Sensors loaded: ${sensors.size}")
-            
+
             val error = sensorsResult.exceptionOrNull()?.message ?: userResult.exceptionOrNull()?.message
 
             _state.value = _state.value.copy(

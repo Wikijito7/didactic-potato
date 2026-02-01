@@ -53,13 +53,13 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    
+
     state.error?.let { error ->
         LaunchedEffect(error) {
             snackbarHostState.showSnackbar(error)
         }
     }
-    
+
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -127,7 +127,7 @@ private fun HomeContent(
 @Composable
 private fun HomeSkeletonLoading() {
     val skeletonColor = MaterialTheme.colorScheme.surfaceVariant
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -141,9 +141,9 @@ private fun HomeSkeletonLoading() {
                 .clip(RoundedCornerShape(4.dp))
                 .background(skeletonColor)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Last Sensor Data card with skeleton content
         Card(
             modifier = Modifier.fillMaxWidth()
@@ -169,7 +169,7 @@ private fun HomeSkeletonLoading() {
                     )
                 }
             }
-            
+
             // Skeleton sensor items inside the card
             repeat(2) {
                 SensorItemSkeleton(
@@ -183,9 +183,9 @@ private fun HomeSkeletonLoading() {
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // My Sensors card with skeleton content
         Card(
             modifier = Modifier.fillMaxWidth()
@@ -195,7 +195,7 @@ private fun HomeSkeletonLoading() {
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(8.dp)
             )
-            
+
             // Horizontal row of sensor chip skeletons
             Row(
                 modifier = Modifier
@@ -222,9 +222,9 @@ private fun SensorItemSkeleton(color: Color, modifier: Modifier = Modifier) {
                 .clip(RoundedCornerShape(4.dp))
                 .background(color)
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // Info rows skeletons
         repeat(3) {
             Row(
@@ -270,9 +270,9 @@ private fun SensorChipSkeleton(color: Color) {
                     .clip(RoundedCornerShape(4.dp))
                     .background(color)
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Temp skeleton
             Box(
                 modifier = Modifier
@@ -281,9 +281,9 @@ private fun SensorChipSkeleton(color: Color) {
                     .clip(RoundedCornerShape(4.dp))
                     .background(color)
             )
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             // Humidity skeleton
             Box(
                 modifier = Modifier

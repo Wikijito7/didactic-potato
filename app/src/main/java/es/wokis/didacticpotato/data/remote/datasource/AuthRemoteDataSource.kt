@@ -1,10 +1,10 @@
 package es.wokis.didacticpotato.data.remote.datasource
 
+import es.wokis.didacticpotato.data.api.AcknowledgeDTO
 import es.wokis.didacticpotato.data.api.AuthApi
 import es.wokis.didacticpotato.data.api.LoginRequestDTO
 import es.wokis.didacticpotato.data.api.LoginResponseDTO
 import es.wokis.didacticpotato.data.api.RegisterRequestDTO
-import es.wokis.didacticpotato.data.api.AcknowledgeDTO
 
 class AuthRemoteDataSource(private val authApi: AuthApi) {
 

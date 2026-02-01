@@ -17,24 +17,24 @@ suspend inline fun <reified T> HttpClient.executeWithTwoFactorRetry(
     return try {
         // First attempt
         val response = block()
-        
+
         // Check if 2FA is required
         if (response.isTwoFactorChallenge()) {
             val challenge = response.extractTwoFactorChallenge()
                 ?: throw IllegalStateException("Failed to extract 2FA challenge")
-            
+
             Log.d("TwoFactorAuth", "2FA challenge received, requesting code...")
-            
+
             // Request 2FA code from user
             val code = getTwoFactorCode(challenge)
-            
+
             if (code.isNullOrBlank()) {
                 return Result.failure(Exception("2FA code not provided"))
             }
-            
+
             // Retry with 2FA code
             val retryResponse = blockWithTwoFactorHeaders(code, challenge.timestamp)
-            
+
             if (retryResponse.status.isSuccess()) {
                 Result.success(retryResponse.body())
             } else {
