@@ -1,0 +1,83 @@
+# Detekt configuration file
+# https://detekt.dev/docs/introduction/configurations
+
+build:
+  maxIssues: 500
+  excludeCorrectable: true
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  active: true
+  LongParameterList:
+    active: true
+    functionThreshold: 10
+    constructorThreshold: 12
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 20
+    thresholdInClasses: 20
+
+coroutines:
+  active: true
+
+empty-blocks:
+  active: true
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: false
+  TooGenericExceptionThrown:
+    active: true
+
+formatting:
+  active: true
+  android: true
+  autoCorrect: true
+  MaximumLineLength:
+    active: true
+    maxLineLength: 140
+  Indentation:
+    active: true
+    indentSize: 4
+  NoWildcardImports:
+    active: false
+
+naming:
+  active: true
+  FunctionNaming:
+    active: true
+    functionPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ignoreAnnotated: ['Composable']
+  VariableNaming:
+    active: true
+    ignoreAnnotated: ['Composable']
+
+performance:
+  active: true
+
+potential-bugs:
+  active: true
+  UnsafeCast:
+    active: true
+    autoCorrect: true
+
+style:
+  active: true
+  MagicNumber:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**']
+    ignoreNumbers: ['-1', '0', '1', '2', '60', '100', '1000']
+  MaxLineLength:
+    active: true
+    maxLineLength: 140
+  WildcardImport:
+    active: false
+  ReturnCount:
+    active: true
+    max: 3
+  LoopWithTooManyJumpStatements:
+    active: false

@@ -3,7 +3,6 @@ package es.wokis.didacticpotato.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import es.wokis.didacticpotato.domain.usecase.LoginUseCase
-import es.wokis.didacticpotato.domain.model.LoginResultBO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

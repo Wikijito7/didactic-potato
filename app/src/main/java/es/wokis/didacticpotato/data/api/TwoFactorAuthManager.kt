@@ -19,14 +19,14 @@ import kotlinx.coroutines.sync.withLock
  * 4. Retry the request with the code
  */
 class TwoFactorAuthManager {
-    
+
     private val mutex = Mutex()
     private val _challengeState = MutableStateFlow<TwoFactorChallengeState>(TwoFactorChallengeState.Idle)
     val challengeState: StateFlow<TwoFactorChallengeState> = _challengeState.asStateFlow()
-    
+
     // Store pending code provider
     private var pendingCodeProvider: CompletableDeferred<String>? = null
-    
+
     sealed class TwoFactorChallengeState {
         object Idle : TwoFactorChallengeState()
         data class Required(
@@ -37,7 +37,7 @@ class TwoFactorAuthManager {
         data class Loading(val code: String) : TwoFactorChallengeState()
         data class Error(val message: String) : TwoFactorChallengeState()
     }
-    
+
     /**
      * Call this when a 403 with 2FA header is detected.
      * Returns a deferred that will complete when the user provides the code.
@@ -51,16 +51,16 @@ class TwoFactorAuthManager {
             // Create new deferred for this request
             val deferred = CompletableDeferred<String>()
             pendingCodeProvider = deferred
-            
+
             // Emit challenge state
             _challengeState.value = TwoFactorChallengeState.Required(
                 authType = authType,
                 timestamp = timestamp,
                 actionDescription = actionDescription
             )
-            
+
             Log.d("TwoFactorAuthManager", "2FA code requested for: $actionDescription")
-            
+
             // Wait for code
             try {
                 val code = deferred.await()
@@ -73,14 +73,14 @@ class TwoFactorAuthManager {
             }
         }
     }
-    
+
     /**
      * Call this from the UI when user provides the 2FA code.
      */
     fun submitTwoFactorCode(code: String) {
         pendingCodeProvider?.complete(code)
     }
-    
+
     /**
      * Call this from the UI when user cancels the 2FA dialog.
      */
@@ -88,7 +88,7 @@ class TwoFactorAuthManager {
         pendingCodeProvider?.completeExceptionally(Exception("User cancelled"))
         _challengeState.value = TwoFactorChallengeState.Idle
     }
-    
+
     /**
      * Call this when 2FA verification fails.
      */
@@ -96,7 +96,7 @@ class TwoFactorAuthManager {
         _challengeState.value = TwoFactorChallengeState.Error(message)
         // Keep the challenge active so user can retry
     }
-    
+
     /**
      * Call this when 2FA verification succeeds.
      */
@@ -104,7 +104,7 @@ class TwoFactorAuthManager {
         _challengeState.value = TwoFactorChallengeState.Idle
         pendingCodeProvider = null
     }
-    
+
     /**
      * Checks if a response is a 2FA challenge and extracts the details.
      */
@@ -112,7 +112,7 @@ class TwoFactorAuthManager {
         if (response.status == HttpStatusCode.Forbidden) {
             val authType = response.headers[TwoFactorAuthChallenge.AUTH_TYPE_HEADER] ?: "totp"
             val timestamp = System.currentTimeMillis()
-            
+
             return TwoFactorChallengeState.Required(
                 authType = authType,
                 timestamp = timestamp,

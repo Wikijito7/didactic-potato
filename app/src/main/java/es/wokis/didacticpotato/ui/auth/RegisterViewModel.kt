@@ -63,14 +63,14 @@ class RegisterViewModel(
             }
 
             _state.value = _state.value.copy(isLoading = true, error = null)
-            
+
             val result = registerUseCase(
                 email = _state.value.email,
                 username = _state.value.username,
                 password = _state.value.password,
                 lang = _state.value.lang
             )
-            
+
             _state.value = if (result.success) {
                 _state.value.copy(isLoading = false, success = true)
             } else {

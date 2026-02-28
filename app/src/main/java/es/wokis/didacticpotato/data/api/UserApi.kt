@@ -57,15 +57,21 @@ class UserApi(private val client: HttpClient) {
         timestamp: Long? = null
     ): HttpResponse {
         return client.post("$BASE_URL/user/image") {
-            setBody(MultiPartFormDataContent(
-                formData {
-                    append("image", imageData, Headers.build {
-                        append(HttpHeaders.ContentType, "image/jpeg")
-                        append(HttpHeaders.ContentDisposition, "filename=$fileName")
-                    })
-                },
-                boundary = "WebAppBoundary"
-            ))
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append(
+                            "image",
+                            imageData,
+                            Headers.build {
+                                append(HttpHeaders.ContentType, "image/jpeg")
+                                append(HttpHeaders.ContentDisposition, "filename=$fileName")
+                            }
+                        )
+                    },
+                    boundary = "WebAppBoundary"
+                )
+            )
             if (totpCode != null && timestamp != null) {
                 headers {
                     append(TwoFactorAuthChallenge.CODE_HEADER, totpCode)

@@ -36,17 +36,17 @@ fun TwoFactorAuthDialog(
     onConfirm: (String) -> Unit
 ) {
     if (!isVisible) return
-    
+
     var code by remember { mutableStateOf("") }
     var localError by remember { mutableStateOf<String?>(null) }
-    
+
     // Clear local error when code changes
     LaunchedEffect(code) {
         if (code.isNotEmpty()) {
             localError = null
         }
     }
-    
+
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismiss() },
         title = {
@@ -65,12 +65,12 @@ fun TwoFactorAuthDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 OutlinedTextField(
                     value = code,
-                    onValueChange = { 
+                    onValueChange = {
                         // Only allow digits, max 6 characters
                         if (it.length <= 6 && it.all { char -> char.isDigit() }) {
                             code = it
