@@ -57,12 +57,51 @@ state.error?.let { error ->
 ```
 
 ### Loading States
+
+#### Skeleton Loading (Preferred)
+Show placeholder shapes that mimic the actual layout for better UX:
+```kotlin
+if (state.isLoading) {
+    SkeletonLoadingContent()
+} else {
+    // Real content
+}
+
+@Composable
+private fun SkeletonLoadingContent() {
+    val skeletonColor = MaterialTheme.colorScheme.surfaceVariant
+    
+    // Match the structure of your actual UI
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(0.6f)
+            .height(40.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(skeletonColor)
+    )
+    // ... skeleton placeholders matching real cards
+}
+```
+
+#### Spinner Loading (Legacy)
 ```kotlin
 if (state.isLoading) {
     CircularProgressIndicator()
 } else {
     // Content
 }
+```
+
+### Preventing Skeleton Flash
+Check cache before showing loading state:
+```kotlin
+// In ViewModel
+val hasCache = repository.hasCachedData()
+if (!hasCache) {
+    _state.value = _state.value.copy(isLoading = true)
+}
+// Load data...
+_state.value = _state.value.copy(isLoading = false, data = loadedData)
 ```
 
 ### Navigation Patterns

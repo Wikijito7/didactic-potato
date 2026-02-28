@@ -92,7 +92,16 @@ fun DidacticpotatoApp() {
         ) {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 when (currentDestination) {
-                    AppDestinations.HOME -> HomeScreen(modifier = Modifier.padding(innerPadding))
+                    AppDestinations.HOME -> HomeScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        onSensorClick = { sensorId ->
+                            // TODO: Navigate to sensor detail screen
+                            println("Sensor clicked: $sensorId")
+                        },
+                        onAddSensorClick = {
+                            // TODO: Implement add sensor workflow (Bluetooth pairing with ESP32)
+                        }
+                    )
                     AppDestinations.SENSORS -> Greeting(
                         name = currentDestination.label,
                         modifier = Modifier.padding(innerPadding)
