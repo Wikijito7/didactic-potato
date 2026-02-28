@@ -1,7 +1,6 @@
 package es.wokis.didacticpotato.ui.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,17 +12,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BatteryStd
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DeviceThermostat
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,9 +39,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import es.wokis.didacticpotato.ui.components.SensorChipsRow
 import org.koin.compose.koinInject
 
 @Composable
@@ -85,28 +82,44 @@ private fun HomeContent(
     onSensorClick: (String) -> Unit = {},
     onAddSensorClick: () -> Unit = {}
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        Text(
-            text = if (state.userName.isNotEmpty()) "Hello, ${state.userName}" else "Hello",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        )
+    if (state.isLoading) {
+        HomeSkeletonLoading()
+    } else {
+        Box(
+            modifier = modifier.fillMaxSize()
+        ) {
+            // Scrollable content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Greeting
+                Text(
+                    text = if (state.userName.isNotEmpty()) "Hello, ${state.userName}" else "Hello",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-        if (state.isLoading) {
-            HomeSkeletonLoading()
-        } else {
-            LastSensorDataCard(
-                sensors = state.sensors,
-                onRefresh = onRefresh
-            )
+                // Last Sensor Data Card
+                LastSensorDataCard(
+                    sensors = state.sensors,
+                    onRefresh = onRefresh
+                )
 
-            MySensorsCard(
-                sensors = state.sensors,
-                onSensorClick = onSensorClick,
-                onAddSensorClick = onAddSensorClick
-            )
+                // My Sensors Card
+                MySensorsCard(
+                    sensors = state.sensors,
+                    onSensorClick = onSensorClick,
+                    onAddSensorClick = onAddSensorClick
+                )
+
+                // Bottom spacer
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }
@@ -116,14 +129,15 @@ private fun HomeSkeletonLoading() {
     val skeletonColor = MaterialTheme.colorScheme.surfaceVariant
     
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
         // Skeleton for greeting
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.6f)
                 .height(40.dp)
-                .padding(8.dp)
                 .clip(RoundedCornerShape(4.dp))
                 .background(skeletonColor)
         )
@@ -132,9 +146,7 @@ private fun HomeSkeletonLoading() {
         
         // Last Sensor Data card with skeleton content
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -176,9 +188,7 @@ private fun HomeSkeletonLoading() {
         
         // My Sensors card with skeleton content
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = "My Sensors",
@@ -292,37 +302,36 @@ private fun LastSensorDataCard(
     onRefresh: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier.padding(8.dp)
         ) {
-            Text(
-                text = "Last sensor data",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(8.dp)
-            )
-            IconButton(
-                onClick = onRefresh
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Refresh,
-                    contentDescription = "Refresh"
+                Text(
+                    text = "Last sensor data",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                IconButton(
+                    onClick = onRefresh
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = "Refresh"
+                    )
+                }
+            }
+
+            sensors.forEach { sensor ->
+                SensorData(
+                    sensor = sensor,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
-        }
-
-        sensors.forEach { sensor ->
-            SensorData(
-                sensor = sensor,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            )
         }
     }
 }
@@ -334,93 +343,20 @@ private fun MySensorsCard(
     onAddSensorClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = "My Sensors",
-            style = MaterialTheme.typography.titleMedium,
+        Column(
             modifier = Modifier.padding(8.dp)
-        )
-
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(sensors) { sensor ->
-                SensorChip(
-                    sensor = sensor,
-                    onClick = { onSensorClick(sensor.id) }
-                )
-            }
-            item {
-                AddSensorChip(onClick = onAddSensorClick)
-            }
-        }
-    }
-}
-
-@Composable
-private fun SensorChip(
-    sensor: SensorVO,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .width(150.dp)
-            .clickable(onClick = onClick)
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
         ) {
             Text(
-                text = sensor.name,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                text = "My Sensors",
+                style = MaterialTheme.typography.titleMedium
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "${sensor.temp}ºC",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "${sensor.humidity}%",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-    }
-}
 
-@Composable
-private fun AddSensorChip(
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .width(100.dp)
-            .height(80.dp)
-            .clickable(onClick = onClick),
-        colors = androidx.compose.material3.CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = "Add sensor",
-                modifier = Modifier.size(32.dp)
-            )
-            Text(
-                text = "Add",
-                style = MaterialTheme.typography.bodySmall
+            SensorChipsRow(
+                sensors = sensors,
+                onSensorClick = onSensorClick,
+                onAddSensorClick = onAddSensorClick
             )
         }
     }
