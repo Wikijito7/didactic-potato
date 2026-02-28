@@ -44,7 +44,10 @@ class SensorRepository(
             if (cachedSensors.isNotEmpty()) {
                 val firstSensor = cachedSensors.first()
                 val age = System.currentTimeMillis() - firstSensor.lastUpdated
-                Log.d(TAG, "First sensor lastUpdated: ${firstSensor.lastUpdated}, age: ${age}ms, expired: ${age > CACHE_EXPIRY_MS}")
+                Log.d(
+                    TAG,
+                    "First sensor lastUpdated: ${firstSensor.lastUpdated}, age: ${age}ms, expired: ${age > CACHE_EXPIRY_MS}"
+                )
             }
 
             // Check if cache is expired (if we have any data and it's not older than 2 minutes)
@@ -90,7 +93,10 @@ class SensorRepository(
 
     suspend fun getSensorData(sensorId: String) = sensorRemoteDataSource.getSensorData(sensorId)
 
-    suspend fun getHistoricalData(time: Long, interval: String) = sensorRemoteDataSource.getHistoricalData(time, interval)
+    suspend fun getHistoricalData(time: Long, interval: String) = sensorRemoteDataSource.getHistoricalData(
+        time,
+        interval
+    )
 
     suspend fun refreshSensors(): Result<List<SensorBO>> {
         return getLastSensorData(forceRefresh = true)

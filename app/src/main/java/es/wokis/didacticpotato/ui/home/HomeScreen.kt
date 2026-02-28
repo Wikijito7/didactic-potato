@@ -133,79 +133,91 @@ private fun HomeSkeletonLoading() {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Skeleton for greeting
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .height(40.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(skeletonColor)
-        )
+        HomeSkeletonGreeting(skeletonColor)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Last Sensor Data card with skeleton content
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Last sensor data",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(8.dp)
-                )
-                // Disabled refresh button placeholder
-                IconButton(
-                    onClick = {},
-                    enabled = false
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Refresh,
-                        contentDescription = "Refresh"
-                    )
-                }
-            }
-
-            // Skeleton sensor items inside the card
-            repeat(2) {
-                SensorItemSkeleton(
-                    color = skeletonColor,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                )
-                if (it < 1) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                }
-            }
-        }
+        HomeSkeletonLastSensorCard(skeletonColor)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // My Sensors card with skeleton content
-        Card(
+        HomeSkeletonMySensorsCard(skeletonColor)
+    }
+}
+
+@Composable
+private fun HomeSkeletonGreeting(skeletonColor: Color) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(0.6f)
+            .height(40.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(skeletonColor)
+    )
+}
+
+@Composable
+private fun HomeSkeletonLastSensorCard(skeletonColor: Color) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "My Sensors",
+                text = "Last sensor data",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(8.dp)
             )
+            // Disabled refresh button placeholder
+            IconButton(
+                onClick = {},
+                enabled = false
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = "Refresh"
+                )
+            }
+        }
 
-            // Horizontal row of sensor chip skeletons
-            Row(
+        // Skeleton sensor items inside the card
+        repeat(2) {
+            SensorItemSkeleton(
+                color = skeletonColor,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                repeat(3) {
-                    SensorChipSkeleton(skeletonColor)
-                }
+                    .padding(8.dp)
+            )
+            if (it < 1) {
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeSkeletonMySensorsCard(skeletonColor: Color) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = "My Sensors",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(8.dp)
+        )
+
+        // Horizontal row of sensor chip skeletons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            repeat(3) {
+                SensorChipSkeleton(skeletonColor)
             }
         }
     }
@@ -411,6 +423,7 @@ private fun SensorInfoItem(
     }
 }
 
+@Suppress("UnusedPrivateMember") // Used by Android Studio Compose Preview
 @Preview
 @Composable
 private fun HomeScreenPreview() {

@@ -120,8 +120,28 @@ class SensorLocalDataSourceTest {
     fun `Given list of sensors When saveSensors Then inserts all sensors`() = runTest {
         // Given
         val sensors = listOf(
-            SensorDBO(id = "sensor1", name = "Sensor 1", temperature = 25.0, humidity = 60, timestamp = 1234567890L, error = null, batteryIsCharging = null, batteryPercentage = null, lastUpdated = 9876543210L),
-            SensorDBO(id = "sensor2", name = "Sensor 2", temperature = 26.0, humidity = 65, timestamp = 1234567900L, error = null, batteryIsCharging = null, batteryPercentage = null, lastUpdated = 9876543220L)
+            SensorDBO(
+                id = "sensor1",
+                name = "Sensor 1",
+                temperature = 25.0,
+                humidity = 60,
+                timestamp = 1234567890L,
+                error = null,
+                batteryIsCharging = null,
+                batteryPercentage = null,
+                lastUpdated = 9876543210L
+            ),
+            SensorDBO(
+                id = "sensor2",
+                name = "Sensor 2",
+                temperature = 26.0,
+                humidity = 65,
+                timestamp = 1234567900L,
+                error = null,
+                batteryIsCharging = null,
+                batteryPercentage = null,
+                lastUpdated = 9876543220L
+            )
         )
 
         coEvery { sensorDao.insertSensors(any()) } returns Unit

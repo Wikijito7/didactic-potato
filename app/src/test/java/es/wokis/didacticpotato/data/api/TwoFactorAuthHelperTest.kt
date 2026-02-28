@@ -1,6 +1,5 @@
 package es.wokis.didacticpotato.data.api
 
-import io.ktor.client.HttpClient
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 import io.mockk.every
@@ -206,10 +205,6 @@ class TwoFactorAuthHelperTest {
     fun `Given executeWithTwoFactorRetry exists Then it is callable with correct signature`() = runTest {
         // This test verifies the function signature exists and can be called
         // We can't fully test the inline function, but we can verify it compiles
-
-        // Given
-        val httpClient = mockk<HttpClient>()
-        val getCode: suspend (TwoFactorAuthChallenge.Challenge) -> String? = { null }
 
         // The function signature is valid - it compiles
         // We can't execute it without mocking the internal behavior

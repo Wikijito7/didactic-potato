@@ -17,10 +17,12 @@ import kotlinx.serialization.json.Json
 class ApiClient(private val tokenProvider: TokenProvider) {
     val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                }
+            )
         }
         install(Logging) {
             logger = object : Logger {

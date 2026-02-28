@@ -143,6 +143,24 @@ data/
 - Clear cache before saving new data to prevent accumulation
 - Preserve API response order by avoiding ORDER BY in DAO queries
 
+### Static Analysis (Detekt)
+**Required**: All code must pass detekt static analysis (max 50 weighted issues)
+
+Run detekt before committing:
+```bash
+./gradlew detekt
+```
+
+**Common Fixes**:
+- **LongMethod**: Split into smaller composables (max 60 lines)
+- **CyclomaticComplexity**: Extract complex logic into helper functions
+- **UseCheckOrError**: Use `checkNotNull()` instead of `throw IllegalStateException`
+- **MagicNumber**: Define constants for business logic numbers (not UI dimensions/colors)
+- **UnusedPrivateMember (Previews)**: Suppress with `@Suppress("UnusedPrivateMember")` and comment "Used by Android Studio Compose Preview"
+
+**Configuration**: `detekt.yml` in project root
+**Threshold**: Build fails at >50 weighted issues
+
 ### File Formatting Rules
 - **All files must end with a newline character** (POSIX standard)
 - This is required for proper git diffs, Unix tools compatibility, and IDE consistency
